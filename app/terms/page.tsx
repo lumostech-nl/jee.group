@@ -48,7 +48,7 @@ const sections = [
   { id: "contact", title: "ارتباط با ما" },
 ];
 
-const TOC = dynamic(() => import("@/components/privacy/toc"), { ssr: false });
+const TOC = dynamic(() => import("@/components/privacy/toc"));
 
 const TermsOfServicesPage = () => {
   const updatedAt = new Date().toLocaleDateString("fa-IR", {
