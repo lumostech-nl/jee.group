@@ -25,7 +25,7 @@ function Badge({ icon, text }: { icon: React.ReactNode; text: string }) {
 }
 
 const companies = [
-  { name: "بانک سپه", logo: "/companyLogos/BankSepah_Logo.png" },
+  { name: "بانک سپه", logo: "/BankSepah_Logo.png" },
   {
     name: "پرداخت الکترونیک پاسارگاد",
     logo: "/companyLogos/pasargad-epay.webp",
