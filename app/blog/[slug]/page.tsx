@@ -16,23 +16,27 @@ interface BlogPostPageProps {
   };
 }
 
+// Force dynamic rendering to prevent build-time database queries
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
-  const post = await prisma.blogPost.findUnique({
-    where: { slug: params.slug, status: "PUBLISHED" },
-    include: {
-      author: {
-        select: { name: true },
+  try {
+    const post = await prisma.blogPost.findUnique({
+      where: { slug: params.slug, status: "PUBLISHED" },
+      include: {
+        author: {
+          select: { name: true },
+        },
       },
-    },
-  });
+    });
 
-  if (!post) {
-    return {
-      title: "Post Not Found - Jee Group",
-    };
-  }
+    if (!post) {
+      return {
+        title: "Post Not Found - Jee Group",
+      };
+    }
 
   const url = `${process.env.NEXT_PUBLIC_SITE_URL}/blog/${post.slug}`;
 
@@ -48,7 +52,14 @@ export async function generateMetadata({
     publishedTime: post.publishedAt?.toISOString(),
     modifiedTime: post.updatedAt.toISOString(),
     tags: [], // You could add category/tag names here
-  });
+    });
+  } catch (error) {
+    // If database query fails during build, return default metadata
+    console.warn('Could not fetch post metadata:', error);
+    return {
+      title: "Blog Post - Jee Group",
+    };
+  }
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {

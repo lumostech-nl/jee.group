@@ -6,6 +6,9 @@ import { BlogSidebar } from "@/components/blog/blog-sidebar";
 import { PersianHeader } from "@/components/persian-header";
 import { PersianFooter } from "@/components/persian-footer";
 
+// Force dynamic rendering to prevent build-time database queries
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = generateMetadata({
   title: "وبلاگ - گروه آتی ارتباطات ژی",
   description:
