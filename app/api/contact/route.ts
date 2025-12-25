@@ -3,6 +3,9 @@ import { prisma } from "@/lib/db";
 import { z } from "zod";
 import { sendEmail, emailTemplates } from "@/lib/email";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 const contactSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
