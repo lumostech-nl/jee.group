@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: jee_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jee_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - jee-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: jee_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - jee-network
+
+  # MinIO services removed - using Vercel Blob instead
+  # minio:
+  #   image: minio/minio:latest
+  #   container_name: jee_minio
+  #   environment:
+  #     MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+  #     MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+  #   ports:
+  #     - "9004:9000"  # API
+  #     - "9005:9001"  # Console
+  #   volumes:
+  #     - minio_data:/data
+  #   command: server /data --console-address ":9001"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
+  #   networks:
+  #     - jee-network
+
+  # minio-init:
+  #   image: minio/mc:latest
+  #   container_name: jee_minio_init
+  #   depends_on:
+  #     minio:
+  #       condition: service_healthy
+  #   entrypoint: |
+  #     sh -c "
+  #       # Wait for MinIO to be ready
+  #       sleep 5
+  #       # Configure mc
+  #       mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin123}
+  #       # Create bucket for media uploads
+  #       mc mb myminio/${MINIO_BUCKET:-jee-group-media} --ignore-existing
+  #       # Set bucket policy to public read
+  #       mc policy set public myminio/${MINIO_BUCKET:-jee-group-media}
+  #       echo 'MinIO setup complete!'
+  #     "
+  #   restart: "no"
+  #   networks:
+  #     - jee-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jee_app
+    environment:
+      # Database
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/${POSTGRES_DB:-jee_db}
+      # Redis
+      REDIS_URL: redis://redis:6379
+      # Vercel Blob Storage
+      BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN}
+      # NextAuth
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      # App
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - jee-network
+
+volumes:
+  postgres_data:
+  # minio_data:  # MinIO volume removed - using Vercel Blob instead
+
+networks:
+  jee-network:
+    driver: bridge

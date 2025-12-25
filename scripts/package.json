@@ -1,0 +1,16 @@
+{
+  "name": "jee-group-strapi-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for JEE Group Strapi setup and migration",
+  "main": "index.js",
+  "scripts": {
+    "migrate": "node migrate-to-strapi-cloud.js",
+    "setup": "node setup-strapi-content-types.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "keywords": ["strapi", "migration", "cms"],
+  "author": "JEE Group",
+  "license": "MIT"
+}
